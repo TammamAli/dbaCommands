@@ -1,3 +1,5 @@
+--Reorganize and Rebuild Indexes in the Database
+
 DECLARE @TableName VARCHAR(255)
 DECLARE @INDEXNAME VARCHAR(255)
 DECLARE @sql NVARCHAR(500)
