@@ -1,15 +1,17 @@
 --Reorganize and Rebuild Indexes in the Database
 
+DECLARE @SchemaName VARCHAR(255)
 DECLARE @TableName VARCHAR(255)
 DECLARE @INDEXNAME VARCHAR(255)
 DECLARE @sql NVARCHAR(500)
 
 DECLARE TableCursor CURSOR FOR
-SELECT name AS TableName
-FROM sys.tables
+SELECT s.name as schemaName,t.name AS TableName
+FROM sys.tables t INNER JOIN sys.schemas S
+ON t.schema_id = s.schema_id
 
 OPEN TableCursor
-FETCH NEXT FROM TableCursor INTO @TableName
+FETCH NEXT FROM TableCursor INTO @SchemaName, @TableName
 
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
@@ -28,15 +30,15 @@ FETCH NEXT FROM TableCursor INTO @TableName
 				WHILE @@FETCH_STATUS = 0
 				BEGIN
 				
-					SET @sql = 'ALTER INDEX ' + '[' + @INDEXNAME + ']' + ' ON ' + '[' + @TableName + ']' + ' REBUILD '
-					PRINT('EXEC: ' + @TableName + '      -      ' + @INDEXNAME + '      -      STARTED AT: ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
+					SET @sql = 'ALTER INDEX ' + '[' + @INDEXNAME + ']' + ' ON ' + '['+ @SchemaName+'].'+ '[' + @TableName + ']' + ' REBUILD '
+					PRINT('EXEC: ' + '['+ @SchemaName+'].'+  @TableName + '      -      ' + @INDEXNAME + '      -      STARTED AT: ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
 					EXEC  (@sql)
-					PRINT('DONE: ' + @TableName + '      -      ' + @INDEXNAME + '      -      ENDED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
+					PRINT('DONE: ' +'['+ @SchemaName+'].'+  @TableName + '      -      ' + @INDEXNAME + '      -      ENDED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
 					
-					SET @sql = 'ALTER INDEX ' + '['+@INDEXNAME+']' + ' ON ' + '[' + @TableName + ']' + ' reorganize '
-					PRINT('EXEC: ' + @TableName + '      -      ' + @INDEXNAME + '      -      STARTED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
+					SET @sql = 'ALTER INDEX ' + '['+@INDEXNAME+']' + ' ON ' + '['+ @SchemaName+'].'+ '[' + @TableName + ']' + ' reorganize '
+					PRINT('EXEC: ' +'['+ @SchemaName+'].'+  @TableName + '      -      ' + @INDEXNAME + '      -      STARTED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
 					EXEC  (@sql)
-					PRINT('DONE: ' + @TableName + '      -      ' + @INDEXNAME + '      -      ENDED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
+					PRINT('DONE: ' +'['+ @SchemaName+'].'+  @TableName + '      -      ' + @INDEXNAME + '      -      ENDED AT : ' + FORMAT(GETDATE(),'dd-MM HH:mm')   )
 						
 				FETCH NEXT FROM INDEXCursor INTO @INDEXNAME
 				END
@@ -44,7 +46,7 @@ FETCH NEXT FROM TableCursor INTO @TableName
 			CLOSE INDEXCursor
 			DEALLOCATE INDEXCursor
 	
-	FETCH NEXT FROM TableCursor INTO @TableName
+	FETCH NEXT FROM TableCursor INTO @SchemaName, @TableName
 	END
 
 CLOSE TableCursor
